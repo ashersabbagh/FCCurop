@@ -9,110 +9,93 @@ import pandas as pd
 
 
 
+#NOTE: when using a new file, make sure to make the names array in this order!
+names = ['muplus_px', 'muplus_py', 'muplus_pz', 'muplus_E', 'muplus_q', 'muminus_px', 'muminus_py', 'muminus_pz', 'muminus_E',
+'proton_px', 'proton_py', 'proton_pz', 'proton_E', 'proton_q', 'pion_px', 'pion_py', 'pion_pz', 'pion_E']
 
-names_nodetector = ['Lambda0_TRUEP_E', 'Lambda0_TRUEP_X', 'Lambda0_TRUEP_Y', 'Lambda0_TRUEP_Z', 'Lambda_b0_TRUEP_E', 'Lambda_b0_TRUEP_X', 'Lambda_b0_TRUEP_Y', 
-'Lambda_b0_TRUEP_Z', 'muplus_TRUEP_X', 'muplus_TRUEP_Y', 'muplus_TRUEP_Z', 'muplus_TRUEP_E', 'muminus_TRUEP_X', 
-'muminus_TRUEP_Y', 'muminus_TRUEP_Z', 'muminus_TRUEP_E', 'pplus_TRUEP_X', 'pplus_TRUEP_Y', 'pplus_TRUEP_Z', 
-'pplus_TRUEP_E', 'piminus_TRUEP_X', 'piminus_TRUEP_Y', 'piminus_TRUEP_Z', 'piminus_TRUEP_E', 'pplus_ID', 'piminus_ID', 'muplus_ID', 'muminus_ID']
+names_detector = ['Muons_mu1px', 'Muons_mu1py', 'Muons_mu1pz', '(Muons_mu1p**2 + Muons_mu1m**2)**0.5', 'Muons_mu1q', 'Muons_mu2px', 
+'Muons_mu2py', 'Muons_mu2pz', '(Muons_mu2p**2 + Muons_mu2m**2)**0.5', 'LCandidates_h1px', 'LCandidates_h1py', 'LCandidates_h1pz', 
+'(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5', 'LCandidates_h1q', 'LCandidates_h2px', 'LCandidates_h2py', 'LCandidates_h2pz', '(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5']
 
-names_detector = ['LCandidates_h1p', 'LCandidates_h1m', 'LCandidates_h1px', 'LCandidates_h1py', 'LCandidates_h1pz', 'LCandidates_h2p', 'LCandidates_h2m', 'LCandidates_h2px', 
-'LCandidates_h2py', 'LCandidates_h2pz', 'LCandidates_h1q', 'LCandidates_mass', 'Muons_mu1p', 'Muons_mu1m', 'Muons_mu1px', 'Muons_mu1py', 
-'Muons_mu1pz', 'Muons_mu1q', 'Muons_mu2p', 'Muons_mu2px', 'Muons_mu2py', 'Muons_mu2pz', 'Muons_mu2q', '(Muons_mu1p**2 + Muons_mu1m**2)**0.5', 
-'(Muons_mu2p**2 + Muons_mu2m**2)**0.5', '(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5', '(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5']
+names_nodetector = ['mup_0_PX_TRUE', 'mup_0_PY_TRUE', 'mup_0_PZ_TRUE', 'mup_0_E_TRUE', 'MISSING', 'mum_0_PX_TRUE', 'mum_0_PY_TRUE', 
+'mum_0_PZ_TRUE', 'mum_0_E_TRUE', 'pp_0_PX_TRUE', 'pp_0_PY_TRUE', 'pp_0_PZ_TRUE', 'pp_0_E_TRUE', 'MISSING', 'pim_0_PX_TRUE', 'pim_0_PY_TRUE',
+'pim_0_PZ_TRUE', 'pim_0_E_TRUE']
 
+# names_detector = ['LCandidates_h1p', 'LCandidates_h1m', 'LCandidates_h1px', 'LCandidates_h1py', 'LCandidates_h1pz', 'LCandidates_h2p', 'LCandidates_h2m', 'LCandidates_h2px', 
+# 'LCandidates_h2py', 'LCandidates_h2pz', 'LCandidates_h1q', 'LCandidates_mass', 'Muons_mu1p', 'Muons_mu1m', 'Muons_mu1px', 'Muons_mu1py', 
+# 'Muons_mu1pz', 'Muons_mu1q', 'Muons_mu2p', 'Muons_mu2px', 'Muons_mu2py', 'Muons_mu2pz', 'Muons_mu2q', '(Muons_mu1p**2 + Muons_mu1m**2)**0.5', 
+# '(Muons_mu2p**2 + Muons_mu2m**2)**0.5', '(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5', '(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5']
 
 
 def collect(filename):
     costhetap_array = []
     costhetamu_array = []
-    phip_array = []
+    phi_array = []
     phimu_array = []
-    phitot_array = []
+    phippi_array = []
     costhetab_array = []
     costhetat_array = []
+    mass_array = []
+    dataDict = {}
+
 
 
     
     with uproot.open('/work/submit/amsabbag/anglefit/data/' + filename) as f:
-        names = ''
-        if(filename == 'LbToLzMuMu.root'):
+        if(filename == 'Lb2Lmm_tree.root'):
             type = 'nodetector'
-            names = names_nodetector
-            tree = f['MCDecayTreeTuple/MCDecayTree;1']
+            tree = f['DecayTree']
+            for i in range(len(names)):
+                if names_nodetector[i] == 'MISSING':
+                    dataDict[names[i]] = np.full(len(dataDict[names[0]]), 1) 
+                else:
+                    dataDict[names[i]] = tree.arrays([names_nodetector[i]])[names_nodetector[i]]
+
+
         elif(filename == 'clean.root'):
             type = 'detector'
-            names = names_detector
             tree = f['events']
+            for i in range(len(names)):
+                dataDict[names[i]] = np.array(tree.arrays([names_detector[i]])[names_detector[i]]).flatten()
       
         
-        dataDict = {}
-        for n in names:
-            dataDict[n] = tree.arrays([n])[n]
-    
+        
+    print('Getting data, this may take some time...')
+    j = 0
     for i in range(len(dataDict[names[0]])):
-        if(filename == 'LbToLzMuMu.root'):
-            #define particles and n direction
+        j += 1
+        if j / len(dataDict[names[0]]) > 0.1:
+            print(f'{100*round(i / len(dataDict[names[0]]), 2)}% complete...')
+            j = 0
 
-            pmass = np.sqrt(dataDict['pplus_TRUEP_E'][i]**2 - (dataDict['pplus_TRUEP_X'][i]**2 + dataDict['pplus_TRUEP_Y'][i]**2 + dataDict['pplus_TRUEP_Z'][i]**2))
+        #define particles and n direction:
 
 
-            if(dataDict['muplus_ID'][i] > 0):
-                muplus = TLorentzVector(dataDict['muplus_TRUEP_X'][i], dataDict['muplus_TRUEP_Y'][i], dataDict['muplus_TRUEP_Z'][i], dataDict['muplus_TRUEP_E'][i])
-                muminus = TLorentzVector(dataDict['muminus_TRUEP_X'][i], dataDict['muminus_TRUEP_Y'][i], dataDict['muminus_TRUEP_Z'][i], dataDict['muminus_TRUEP_E'][i])
-            else:
-                muminus = TLorentzVector(dataDict['muplus_TRUEP_X'][i], dataDict['muplus_TRUEP_Y'][i], dataDict['muplus_TRUEP_Z'][i], dataDict['muplus_TRUEP_E'][i])
-                muplus = TLorentzVector(dataDict['muminus_TRUEP_X'][i], dataDict['muminus_TRUEP_Y'][i], dataDict['muminus_TRUEP_Z'][i], dataDict['muminus_TRUEP_E'][i])
 
-            
-            if(pmass > 0.5):
-                proton = TLorentzVector(dataDict['pplus_TRUEP_X'][i], dataDict['pplus_TRUEP_Y'][i], dataDict['pplus_TRUEP_Z'][i], dataDict['pplus_TRUEP_E'][i])
-                Lzero = dataDict['pplus_ID'][i] > 0
-                pion = TLorentzVector(dataDict['piminus_TRUEP_X'][i], dataDict['piminus_TRUEP_Y'][i], dataDict['piminus_TRUEP_Z'][i], dataDict['piminus_TRUEP_E'][i])
-            else:
-                print("pion")
-                pion = TLorentzVector(dataDict['pplus_TRUEP_X'][i], dataDict['pplus_TRUEP_Y'][i], dataDict['pplus_TRUEP_Z'][i], dataDict['pplus_TRUEP_E'][i])
-                Lzero = dataDict['pplus_ID'][i] < 0
-                proton = TLorentzVector(dataDict['piminus_TRUEP_X'][i], dataDict['piminus_TRUEP_Y'][i], dataDict['piminus_TRUEP_Z'][i], dataDict['piminus_TRUEP_E'][i])
+        if(dataDict['muplus_q'][i] > 0):
+            muplus = TLorentzVector(dataDict['muplus_px'][i], dataDict['muplus_py'][i], dataDict['muplus_pz'][i], dataDict['muplus_E'][i])
+            muminus = TLorentzVector(dataDict['muminus_px'][i], dataDict['muminus_py'][i], dataDict['muminus_pz'][i], dataDict['muminus_E'][i])
+        else:
+            muminus = TLorentzVector(dataDict['muplus_px'][i], dataDict['muplus_py'][i], dataDict['muplus_pz'][i], dataDict['muplus_E'][i])
+            muplus = TLorentzVector(dataDict['muminus_px'][i], dataDict['muminus_py'][i], dataDict['muminus_pz'][i], dataDict['muminus_E'][i])
+
+
+        proton = TLorentzVector(dataDict['proton_px'][i], dataDict['proton_py'][i], dataDict['proton_pz'][i], dataDict['proton_E'][i])
+        Lzero = dataDict['proton_q'][i] > 0
+        pion = TLorentzVector(dataDict['pion_px'][i], dataDict['pion_py'][i], dataDict['pion_pz'][i], dataDict['pion_E'][i])
+
         
         
-        elif(filename == 'clean.root'):
-            #define particles and n direction
-
-
-
-
-            if(dataDict['Muons_mu1q'][i][0] > 0):
-                muplus = TLorentzVector(dataDict['Muons_mu1px'][i][0], dataDict['Muons_mu1py'][i][0], dataDict['Muons_mu1pz'][i][0], dataDict['(Muons_mu1p**2 + Muons_mu1m**2)**0.5'][i][0])
-                muminus = TLorentzVector(dataDict['Muons_mu2px'][i][0], dataDict['Muons_mu2py'][i][0], dataDict['Muons_mu2pz'][i][0], dataDict['(Muons_mu2p**2 + Muons_mu2m**2)**0.5'][i][0])
-            else:
-                muminus = TLorentzVector(dataDict['Muons_mu1px'][i][0], dataDict['Muons_mu1py'][i][0], dataDict['Muons_mu1pz'][i][0], dataDict['(Muons_mu1p**2 + Muons_mu1m**2)**0.5'][i][0])
-                muplus = TLorentzVector(dataDict['Muons_mu2px'][i][0], dataDict['Muons_mu2py'][i][0], dataDict['Muons_mu2pz'][i][0], dataDict['(Muons_mu2p**2 + Muons_mu2m**2)**0.5'][i][0])
-
-            
-            if(dataDict['LCandidates_h1m'][0] > 0.5):
-                proton = TLorentzVector(dataDict['LCandidates_h1px'][i][0], dataDict['LCandidates_h1py'][i][0], dataDict['LCandidates_h1pz'][i][0], dataDict['(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5'][i][0])
-                Lzero = dataDict['LCandidates_h1q'][i][0] > 0
-                pion = TLorentzVector(dataDict['LCandidates_h2px'][i][0], dataDict['LCandidates_h2py'][i][0], dataDict['LCandidates_h2pz'][i][0], dataDict['(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5'][i][0])
-            else:
-                pion = TLorentzVector(dataDict['LCandidates_h1px'][i][0], dataDict['LCandidates_h1py'][i][0], dataDict['LCandidates_h1pz'][i][0], dataDict['(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5'][i][0])
-                Lzero = dataDict['LCandidates_h1q'][i][0] < 0
-                proton = TLorentzVector(dataDict['LCandidates_h2px'][i][0], dataDict['LCandidates_h2py'][i][0], dataDict['LCandidates_h2pz'][i][0], dataDict['(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5'][i][0])
-
-
-
         #get particle groups
         mumu = muplus + muminus
         lambda0 = proton + pion
         lambdab = mumu + lambda0
-        lambdab3 = TVector3(lambda0[0], lambda0[1], lambda0[2])
         
         
         
         #define axes
         beam = TVector3(0, 0, 1)
-        beamvec = TLorentzVector(0, beam[0], beam[1], beam[2])
-        n = beam.Cross(lambdab3) / beam.Cross(lambdab3).Mag()
-        nvec = TLorentzVector(0, n[0], n[1], n[2])
+        n = lambdab.Vect().Cross(beam)
 
 
 
@@ -133,10 +116,9 @@ def collect(filename):
         lambda0_bf = TLorentzVector(lambda0)
         lambda0_bf.Boost(lambdabboost)
 
-        lambdab_mumuf = TLorentzVector(lambdab)
-        lambdab_mumuf.Boost(mumuboost)
-        lambdab_ppf = TLorentzVector(lambdab)
-        lambdab_ppf.Boost(lambda0boost)
+
+        mumu_bf = TLorentzVector(mumu)
+        mumu_bf.Boost(lambdabboost)
 
         muplus_bf = TLorentzVector(muplus)
         muplus_bf.Boost(lambdabboost)
@@ -149,55 +131,69 @@ def collect(filename):
         pion_bf.Boost(lambdabboost)
 
         #get polarization angles
-        costhetab_array.append(math.cos(nvec.Vect().Angle(lambda0_bf.Vect())))
+        costhetab_array.append(math.cos(n.Angle(lambda0_bf.Vect())))
         costhetat_array.append(math.cos(lambdab.Vect().Angle(lambda0_bf.Vect())))
 
 
 
         #getting costhetamu:
+        #NOTE: angle between dilepton in lb frame and muplus in dilepton frame 
         if (Lzero):
-            costhetamu_array.append(math.cos(muplus_mumuf.Vect().Angle(-lambdab_mumuf.Vect())))
+            costhetamu_array.append(math.cos(muplus_mumuf.Vect().Angle(mumu_bf.Vect())))
         else:
-            costhetamu_array.append(math.cos(muminus_mumuf.Vect().Angle(-lambdab_mumuf.Vect())))
+            costhetamu_array.append(math.cos(muminus_mumuf.Vect().Angle(mumu_bf.Vect())))
         
         #getting costhetap:
-        costhetap_array.append(math.cos(proton_ppf.Vect().Angle(-lambdab_ppf.Vect())))
+        costhetap_array.append(math.cos(proton_ppf.Vect().Angle(-mumu_bf.Vect())))
 
         #now getting the phi angles:
+        # normalppi = proton_bf.Vect().Cross(pion_bf.Vect())
+        # normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
+        
+        # if Lzero:
+        #     phi = normalppi.Angle(normalmumu)
+        #     if (normalmumu.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0):
+        #         phi = -phi
+        # else:
+        #     phi = normalppi.Angle(-normalmumu)
+        #     if (normalmumu.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0):
+        #         phi = -phi
+ 
+        # phi_array.append(phi)
         normalppi = proton_bf.Vect().Cross(pion_bf.Vect())
         normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
         
-        phi_p = nvec.Vect().Angle(normalppi)
-        if (normalppi.Cross(nvec.Vect()).Dot(lambda0_bf.Vect()) < 0.0):
-                phi_p = -phi_p
+        phi_p = np.pi/2 - n.Angle(normalppi)
+
     
         if Lzero:
-            phi_mu = nvec.Vect().Angle(normalmumu)
-            if (normalmumu.Cross(nvec.Vect()).Dot(lambda0_bf.Vect()) < 0.0):
-                phi_mu = -phi_mu
+            phi_mu = np.pi/2 - n.Angle(normalmumu)
         else:
-            phi_mu = nvec.Vect().Angle(-normalmumu)
-            if (normalmumu.Cross(nvec.Vect()).Dot(lambda0_bf.Vect()) < 0.0):
-                phi_mu = -phi_mu
+            phi_mu = np.pi/2 - n.Angle(-normalmumu)
+
  
         phimu_array.append(phi_mu)
-        phip_array.append(phi_p)
-        phitot_array.append(phi_mu + phi_p)
-
+        phippi_array.append(phi_p)
+        phi_array.append(phi_mu - phi_p)
+        
+        mass_array.append(lambdab.Mag())
 
     dict = {}
     dict['costhetamu'] = costhetamu_array
     dict['costhetap'] = costhetap_array
     dict['costhetab'] = costhetab_array
     dict['costhetat'] = costhetat_array
+    dict['phi'] = phi_array
     dict['phimu'] = phimu_array
-    dict['phip'] = phip_array
-    dict['phitot'] = phitot_array
+    dict['phippi'] = phippi_array
+
+    dict['mass'] = mass_array
+
     
     df = pd.DataFrame.from_dict(dict)
     df.to_hdf('/work/submit/amsabbag/anglefit/data/' + type, key='data', mode='w')
-
-    return (costhetamu_array, costhetap_array, phitot_array)
+    print('Data complete.  ROOT file generated.')
+    return (costhetamu_array, costhetap_array, phi_array, mass_array)
 
 
 
