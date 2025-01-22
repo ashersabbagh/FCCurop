@@ -163,18 +163,26 @@ def collect(filename):
         normalppi = proton_bf.Vect().Cross(pion_bf.Vect())
         normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
         
-        phi_p = np.pi/2 - n.Angle(normalppi)
 
+        cosphip = normalppi.Dot(n) / (normalppi.Mag() * n.Mag())
+        phi_p = math.acos(cosphip)
+
+        if n.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0:
+            phi_p = -phi_p
     
         if Lzero:
-            phi_mu = np.pi/2 - n.Angle(normalmumu)
+            cosphimu = normalmumu.Dot(n) / (normalmumu.Mag() * n.Mag())
+            phi_mu = math.acos(cosphimu)
         else:
-            phi_mu = np.pi/2 - n.Angle(-normalmumu)
+            cosphimu = -normalmumu.Dot(n) / (normalmumu.Mag() * n.Mag())
+            phi_mu = math.acos(cosphimu)
 
+        if n.Cross(normalmumu).Dot(lambda0_bf.Vect()) > 0.0:
+            phi_mu = -phi_mu
  
         phimu_array.append(phi_mu)
         phippi_array.append(phi_p)
-        phi_array.append(phi_mu - phi_p)
+        phi_array.append((phi_mu + phi_p) % 2*np.pi)
         
         mass_array.append(lambdab.Mag())
 
