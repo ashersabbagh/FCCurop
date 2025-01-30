@@ -27,7 +27,7 @@ names_nodetector = ['mup_0_PX_TRUE', 'mup_0_PY_TRUE', 'mup_0_PZ_TRUE', 'mup_0_E_
 # '(Muons_mu2p**2 + Muons_mu2m**2)**0.5', '(LCandidates_h1p**2 + LCandidates_h1m**2)**0.5', '(LCandidates_h2p**2 + LCandidates_h2m**2)**0.5']
 
 
-def collect(filename):
+def collect(filename, type):
     costhetap_array = []
     costhetamu_array = []
     phi_array = []
@@ -36,14 +36,14 @@ def collect(filename):
     costhetab_array = []
     costhetat_array = []
     mass_array = []
+    q2_array = []
     dataDict = {}
 
 
 
     
-    with uproot.open('/work/submit/amsabbag/anglefit/data/' + filename) as f:
-        if(filename == 'Lb2Lmm_tree.root'):
-            type = 'nodetector'
+    with uproot.open('/work/submit/amsabbag/anglefit/data/source_data/' + filename) as f:
+        if(type == 'nodetector'):
             tree = f['DecayTree']
             for i in range(len(names)):
                 if names_nodetector[i] == 'MISSING':
@@ -52,8 +52,7 @@ def collect(filename):
                     dataDict[names[i]] = tree.arrays([names_nodetector[i]])[names_nodetector[i]]
 
 
-        elif(filename == 'clean.root'):
-            type = 'detector'
+        elif(type == 'detector'):
             tree = f['events']
             for i in range(len(names)):
                 dataDict[names[i]] = np.array(tree.arrays([names_detector[i]])[names_detector[i]]).flatten()
@@ -91,6 +90,7 @@ def collect(filename):
         lambda0 = proton + pion
         lambdab = mumu + lambda0
         
+        q2_array.append(mumu.Mag()**2)
         
         
         #define axes
@@ -147,42 +147,53 @@ def collect(filename):
         costhetap_array.append(math.cos(proton_ppf.Vect().Angle(-mumu_bf.Vect())))
 
         #now getting the phi angles:
-        # normalppi = proton_bf.Vect().Cross(pion_bf.Vect())
-        # normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
-        
-        # if Lzero:
-        #     phi = normalppi.Angle(normalmumu)
-        #     if (normalmumu.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0):
-        #         phi = -phi
-        # else:
-        #     phi = normalppi.Angle(-normalmumu)
-        #     if (normalmumu.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0):
-        #         phi = -phi
- 
-        # phi_array.append(phi)
         normalppi = proton_bf.Vect().Cross(pion_bf.Vect())
-        normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
+  
         
+        planeppi = normalppi.Cross(-lambda0_bf.Vect())
 
-        cosphip = normalppi.Dot(n) / (normalppi.Mag() * n.Mag())
-        phi_p = math.acos(cosphip)
+        if n.Dot(normalppi) > 0.0:
+            phi_p = planeppi.Angle(n)
+        else: 
+            phi_p = 2*np.pi - planeppi.Angle(n)
 
-        if n.Cross(normalppi).Dot(lambda0_bf.Vect()) < 0.0:
-            phi_p = -phi_p
     
         if Lzero:
-            cosphimu = normalmumu.Dot(n) / (normalmumu.Mag() * n.Mag())
-            phi_mu = math.acos(cosphimu)
+            normalmumu = muminus_bf.Vect().Cross(muplus_bf.Vect())
         else:
-            cosphimu = -normalmumu.Dot(n) / (normalmumu.Mag() * n.Mag())
-            phi_mu = math.acos(cosphimu)
+            normalmumu = muplus_bf.Vect().Cross(muminus_bf.Vect())
+        
+        planemumu = normalmumu.Cross(-mumu_bf.Vect())
+        
+        if n.Dot(normalmumu) > 0.0:
+            phi_mu = planemumu.Angle(n)
+        else: 
+            phi_mu = 2*np.pi - planemumu.Angle(n)
 
-        if n.Cross(normalmumu).Dot(lambda0_bf.Vect()) > 0.0:
-            phi_mu = -phi_mu
- 
+        # el = (1/(pion_bf.Vect().Cross(proton_bf.Vect())).Mag()) * (pion_bf.Vect().Cross(proton_bf.Vect()))
+        # ek = (1/(proton_bf.Vect().Cross(pion_bf.Vect())).Mag()) * (proton_bf.Vect().Cross(pion_bf.Vect()))
+        # ez = (1/(proton_bf + pion_bf).Vect().Mag()) * (proton_bf + pion_bf).Vect()
+        # # print("mag ", ez.Mag())
+        # # print(ek.Dot(el)**2 + ((el.Cross(ek)).Dot(ez))**2)
+        # #print(math.cos(phi), math.sin(phi), ek.Dot(el), ((el.Cross(ek)).Dot(ez)))
+        # # print("a")
+        # cos = ek.Dot(el) / (ek.Mag() * el.Mag())
+        # sin = ((el.Cross(ek)).Dot(ez)) / (el.Mag() * ek.Mag() * ez.Mag())
+        # if (sin**2 + cos**2 - 1 > 10e-6):
+        #     print('greater')
+        # if sin < 0:
+        #     p = math.acos(cos) - math.pi
+        # else:
+        #     p = math.acos(cos)
+        # phi_array.append(p)
+        # phimu_array.append(p)
+        # phippi_array.append(p)
+         
+
         phimu_array.append(phi_mu)
         phippi_array.append(phi_p)
         phi_array.append((phi_mu + phi_p) % 2*np.pi)
+        
         
         mass_array.append(lambdab.Mag())
 
@@ -196,10 +207,11 @@ def collect(filename):
     dict['phippi'] = phippi_array
 
     dict['mass'] = mass_array
+    dict['q2'] = q2_array
 
     
     df = pd.DataFrame.from_dict(dict)
-    df.to_hdf('/work/submit/amsabbag/anglefit/data/' + type, key='data', mode='w')
+    df.to_hdf('/work/submit/amsabbag/anglefit/data/' + filename[:-5] + '_' + type, key='data', mode='w')
     print('Data complete.  ROOT file generated.')
     return (costhetamu_array, costhetap_array, phi_array, mass_array)
 
