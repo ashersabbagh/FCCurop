@@ -20,11 +20,13 @@ namespace tools
   void getFourMomentum( std::string partName,
                         TreeReader* reader,
                         TLorentzVector& result,
+                        bool rapidsim,
                         bool reconstructed = true );
 
   void getFourMomentum_C( std::string head, std::string partName,
                         TreeReader* reader,
-                        TLorentzVector& result);
+                        TLorentzVector& result,
+                        bool rapidsim );
 
   void LbPsiRAngles( TLorentzVector initialProton,
                      TLorentzVector pB,

@@ -5,18 +5,35 @@ namespace tools {
   void getFourMomentum( std::string particleName,
                         TreeReader* reader,
                         TLorentzVector& result,
+                        bool rapidsim,
                         bool reconstructed ) {
     double px, py, pz, pe;
-    if ( reconstructed ) {
-      px = reader->GetValue( ( particleName + "_PX" ).c_str() );
-      py = reader->GetValue( ( particleName + "_PY" ).c_str() );
-      pz = reader->GetValue( ( particleName + "_PZ" ).c_str() );
-      pe = reader->GetValue( ( particleName + "_E" ).c_str() );
+    if ( rapidsim ) {
+      if ( reconstructed ) {
+        px = reader->GetValue( ( particleName + "PX" ).c_str() );
+        py = reader->GetValue( ( particleName + "PY" ).c_str() );
+        pz = reader->GetValue( ( particleName + "PZ" ).c_str() );
+        pe = reader->GetValue( ( particleName + "E" ).c_str() );
+      } else {
+        px = reader->GetValue( ( particleName + "PX_TRUE" ).c_str() );
+        py = reader->GetValue( ( particleName + "PY_TRUE" ).c_str() );
+        pz = reader->GetValue( ( particleName + "PZ_TRUE" ).c_str() );
+        pe = reader->GetValue( ( particleName + "E_TRUE" ).c_str() );
+      }
     } else {
-      px = reader->GetValue( ( particleName + "_PX_TRUE" ).c_str() );
-      py = reader->GetValue( ( particleName + "_PY_TRUE" ).c_str() );
-      pz = reader->GetValue( ( particleName + "_PZ_TRUE" ).c_str() );
-      pe = reader->GetValue( ( particleName + "_E_TRUE" ).c_str() );
+      if ( reconstructed ) {
+        px = reader->GetValue( ( particleName + "px" ).c_str() );
+        py = reader->GetValue( ( particleName + "py" ).c_str() );
+        pz = reader->GetValue( ( particleName + "pz" ).c_str() );
+        float p = TMath::Sqrt( px * px + py * py + pz * pz );
+        pe = TMath::Sqrt( p * p + 0.13957061 * 0.13957061 );
+      } else {
+        px = reader->GetValue( ( particleName + "px_TRUE" ).c_str() );
+        py = reader->GetValue( ( particleName + "py_TRUE" ).c_str() );
+        pz = reader->GetValue( ( particleName + "pz_TRUE" ).c_str() );
+        float p = TMath::Sqrt( px * px + py * py + pz * pz );
+        pe = TMath::Sqrt( p * p + 0.13957061 * 0.13957061 );
+      }
     }
     result.SetPxPyPzE( px, py, pz, pe );
 
@@ -26,7 +43,8 @@ namespace tools {
   void getFourMomentum_C( std::string head,
                           std::string particleName,
                           TreeReader* reader,
-                          TLorentzVector& result ) {
+                          TLorentzVector& result,
+                          bool rapidsim ) {
     double px, py, pz, pe;
     double mass = 0.;
 
@@ -52,12 +70,21 @@ namespace tools {
     }
     //    std::cout << head << " " << particleName << " " << mass << std::endl;
 
-    px = reader->GetValue(
-        ( particleName + "_PX" ).c_str() );
-    py = reader->GetValue(
-        ( particleName + "_PY" ).c_str() );
-    pz = reader->GetValue(
-        ( particleName + "_PZ" ).c_str() );
+    if ( rapidsim ) {
+      px = reader->GetValue(
+          ( particleName + "PX" ).c_str() );
+      py = reader->GetValue(
+          ( particleName + "PY" ).c_str() );
+      pz = reader->GetValue(
+          ( particleName + "PZ" ).c_str() );
+    } else {
+      px = reader->GetValue(
+          ( particleName + "px" ).c_str() );
+      py = reader->GetValue(
+          ( particleName + "py" ).c_str() );
+      pz = reader->GetValue(
+          ( particleName + "pz" ).c_str() );
+    }
     pe = TMath::Sqrt( mass * mass + px * px + py * py + pz * pz );
     //    pe=reader->GetValue( ("Lb_E_"+particleName+"_DauCon").c_str() );
     result.SetPxPyPzE( px, py, pz, pe );

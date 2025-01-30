@@ -32,22 +32,24 @@ int main( int argc, char** argv ) {
 
 
   bool isMC            = config["isMC"].asBool();
+  bool rapidsim        = config["rapidsim"].asBool();
   std::string partName = config["particle"].asString();
   // unsigned int year    = config["year"].asUInt();
-  // Polarity: MgUp = -1, MgDn = 1; from tools/src/BeamCrossing.cc
+  // Polarity: MgUp = -1, MgDn = 1.0; from tools/src/BeamCrossing.cc
   // int polarity         = config["polarity"].asInt();
   std::string inName   = config["inFile"].asString();
   std::string outName  = config["outFile"].asString();
+  std::string tree     = config["tree"].asString();
 
   // std::string inputDir = std::string(std::getenv("LBANAMASTER")) + "/";
   // if (isMC) { inputDir = std::string(std::getenv("LBANAMC")) + "/"; }
-  TreeReader* reader = new TreeReader( "DecayTree" );
+  TreeReader* reader = new TreeReader( tree );
   reader->AddFile(inName);
   reader->Initialize();
 
   // std::string outputDir = std::string(std::getenv("LBANAINTERMEDIATE")) + "/";
   TFile out(outName.c_str(), "recreate");
-  TTree* newTree = new TTree( "DecayTree", "" );
+  TTree* newTree = new TTree( tree.c_str(), "" );
   reader->BranchNewTree( newTree );
 
   bool isLb = true;
@@ -210,37 +212,35 @@ int main( int argc, char** argv ) {
     reader->GetEntry( i );
 
     TLorentzVector LbP4, JpsiP4, LP4, pP4, piP4, mupP4, mumP4, q_diff_P4;
-    // tools::getFourMomentum( partName, reader, LbP4 );
-    // tools::getFourMomentum( "Jpsi", reader, JpsiP4 );
-    // tools::getFourMomentum( lambda0, reader, LP4 );
-    tools::getFourMomentum( proton, reader, pP4 );
-    tools::getFourMomentum( pion, reader, piP4 );
+    // tools::getFourMomentum( partName, reader, LbP4 , rapidsim);
+    // tools::getFourMomentum( "Jpsi", reader, JpsiP4 , rapidsim);
+    // tools::getFourMomentum( lambda0, reader, LP4 , rapidsim);
 
-    if (muon1=="mum_0")//TODO!!!! (reader->GetValue(muon1+"_ID")<0)
+    tools::getFourMomentum( proton, reader, pP4 , rapidsim);
+    tools::getFourMomentum( pion, reader, piP4 , rapidsim);
+
+    float mu1charge = 1.0;
+    if (rapidsim) {
+      mu1charge = 1.0; // This is alwasy a mup in rapidsim
+    } else {
+      mu1charge = reader->GetValue(muon1+"q");
+    }
+
+    if (mu1charge>0)// (reader->GetValue(muon1+"_ID")<0)
     {
-      tools::getFourMomentum(muon1,  reader, mupP4);
-      tools::getFourMomentum(muon2, reader, mumP4);
+      tools::getFourMomentum(muon1,  reader, mupP4, rapidsim);
+      tools::getFourMomentum(muon2, reader, mumP4, rapidsim);
     }
     else
     {
-      tools::getFourMomentum(muon2, reader, mupP4);
-      tools::getFourMomentum(muon1,  reader, mumP4);
+      tools::getFourMomentum(muon2, reader, mupP4, rapidsim);
+      tools::getFourMomentum(muon1,  reader, mumP4, rapidsim);
     }
     LbP4 = pP4 + piP4 + mupP4 + mumP4;
     JpsiP4 = mupP4 + mumP4;
     LP4 = pP4 + piP4;
 
-
-    ////////////////////////////////////////////////////////////////////////////////////////////
-    // Anja did this
-    // if (B03D)
-    // {
-    //   tools::B0PsiRAngles(LbP4, JpsiP4, LP4, mupP4, mumP4, pP4, piP4, ctL,
-    //                       ctH, dphi);
-    // }
-    // else
-    // {
-      charge = 1;//TODO!!! reader->GetValue(proton+"_ID");
+      charge = 1.0;//TODO!!! reader->GetValue(proton+"_ID");
       // Anja did this because FCC collisions are head-on, right?
       // if (BeamCrossing)
       // {
@@ -267,21 +267,28 @@ int main( int argc, char** argv ) {
     //true
     if (isMC)
     {
-      //tools::getFourMomentum(partName,  reader, LbP4,false);
-      //tools::getFourMomentum("Jpsi",    reader, JpsiP4,false);
-      //tools::getFourMomentum("L0",      reader, LP4,false);
-      tools::getFourMomentum(proton,   reader, pP4, false);
-      tools::getFourMomentum(pion,  reader, piP4, false);
+      //tools::getFourMomentum(partName,  reader, LbP4,false, rapidsim);
+      //tools::getFourMomentum("Jpsi",    reader, JpsiP4,false, rapidsim);
+      //tools::getFourMomentum("L0",      reader, LP4,false, rapidsim);
+      tools::getFourMomentum(proton,   reader, pP4, rapidsim, false);
+      tools::getFourMomentum(pion,  reader, piP4, rapidsim, false);
 
-      if (muon1=="mum_0")//TODO!!!(reader->GetValue(muon1+"_TRUEID")<0)
+      float mu1charge_true = 1.0;
+      if (rapidsim) {
+        mu1charge_true = 1.0; // This is alwasy a mup in rapidsim
+      } else {
+        mu1charge_true = reader->GetValue(muon1+"q");
+      }
+
+      if (mu1charge_true>0)// (reader->GetValue(muon1+"_TRUEID")<0)
       {
-        tools::getFourMomentum(muon1,  reader, mupP4, false);
-        tools::getFourMomentum(muon2, reader, mumP4, false);
+        tools::getFourMomentum(muon1,  reader, mupP4, rapidsim, false);
+        tools::getFourMomentum(muon2, reader, mumP4, rapidsim, false);
       }
       else
       {
-        tools::getFourMomentum(muon2, reader, mupP4, false);
-        tools::getFourMomentum(muon1,  reader, mumP4, false);
+        tools::getFourMomentum(muon2, reader, mupP4, rapidsim, false);
+        tools::getFourMomentum(muon1,  reader, mumP4, rapidsim, false);
 
       }
       JpsiP4=mumP4+mupP4;
@@ -300,7 +307,7 @@ int main( int argc, char** argv ) {
       // }
       // else
       // {
-        charge = 1;//TODO!!!reader->GetValue(proton+"_TRUEID");
+        charge = 1.0;//TODO!!!reader->GetValue(proton+"_TRUEID");
         tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
                             piP4, charge, ctPerpT, ctParaT, ctLT, ctHT, phiLT, phiHT, dphiT);
       // }
@@ -317,25 +324,25 @@ int main( int argc, char** argv ) {
       if (isLb)
       {
         // tools::getFourMomentum_C(head, lambda0, reader, LP4);
-        tools::getFourMomentum_C(head, proton, reader, pP4);
-        tools::getFourMomentum_C(head, pion, reader, piP4);
+        tools::getFourMomentum_C(head, proton, reader, pP4, rapidsim);
+        tools::getFourMomentum_C(head, pion, reader, piP4, rapidsim);
       }
-      else
-      {
-        // tools::getFourMomentum_C(head, lambda0, reader, LP4); // TODO: should be KS
-        tools::getFourMomentum_C(head, proton, reader, pP4); // TODO: should be kaon
-        tools::getFourMomentum_C(head, pion, reader, piP4);
-      }
+      // else
+      // {
+      //   // tools::getFourMomentum_C(head, lambda0, reader, LP4); // TODO: should be KS
+      //   tools::getFourMomentum_C(head, proton, reader, pP4); // TODO: should be kaon
+      //   tools::getFourMomentum_C(head, pion, reader, piP4, rapidsim);
+      // }
 
-      if (muon1=="mum_0")//TODO!!!! (reader->GetValue(muon1+"_ID")<0)
+      if (mu1charge>0)// (reader->GetValue(muon1+"_ID")<0)
       {
-        tools::getFourMomentum_C(head, muon1,  reader, mupP4);
-        tools::getFourMomentum_C(head, muon2, reader, mumP4);
+        tools::getFourMomentum_C(head, muon1,  reader, mupP4, rapidsim);
+        tools::getFourMomentum_C(head, muon2, reader, mumP4, rapidsim);
       }
       else
       {
-        tools::getFourMomentum_C(head, muon2, reader, mupP4);
-        tools::getFourMomentum_C(head, muon1,  reader, mumP4);
+        tools::getFourMomentum_C(head, muon2, reader, mupP4, rapidsim);
+        tools::getFourMomentum_C(head, muon1,  reader, mumP4, rapidsim);
       }
 
       LP4 = pP4 + piP4;
@@ -369,9 +376,15 @@ int main( int argc, char** argv ) {
       // LP4 = piP4 + pP4;
       LbP4=JpsiP4+LP4;
 
-      charge = 1;//TODO!!!reader->GetValue(proton+"_ID");
+
+      float protoncharge = 1.0;
+      if (rapidsim) {
+        protoncharge = 1.0; // This is alwasy a p+ in rapidsim
+      } else {
+        protoncharge = reader->GetValue(proton+"q");
+      }
       tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
-                          piP4, charge, cctPerp, cctPara, cctL, cctH, cphiL, cphiH, cdphi);
+                          piP4, protoncharge, cctPerp, cctPara, cctL, cctH, cphiL, cphiH, cdphi);
 
     }
 
