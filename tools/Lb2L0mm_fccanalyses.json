@@ -1,0 +1,13 @@
+{
+    "isMC": false,
+    "particle": "Lb",
+    "inFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_reconstructed.root",
+    "outFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_reconstructed_angles.root",
+    "proton": "LCandidates_h1",
+    "pion": "LCandidates_h2",
+    "muon1": "Muons_mu1",
+    "muon2": "Muons_mu2",
+    "lambda0": "None",
+    "rapidsim": false,
+    "tree": "events"
+}
