@@ -1,0 +1,13 @@
+{
+    "isMC": false,
+    "particle": "Lb",
+    "inFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_phsp_tree.root",
+    "outFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_phsp_tree_angles.root",
+    "proton": "pp_0_",
+    "pion": "pim_0_",
+    "muon1": "mup_0_",
+    "muon2": "mum_0_",
+    "lambda0": "L0_",
+    "rapidsim": true,
+    "tree": "DecayTree"
+}

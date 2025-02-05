@@ -12,7 +12,6 @@
 
 int main( int argc, char** argv ) {
 
-  // Arguments will have json file with list of info. Treat MC and data separately
   if ( argc != 2 ) {
     std::cout << "Usage: angles.exe file.json \n";
     return ( 1 );
@@ -23,7 +22,6 @@ int main( int argc, char** argv ) {
   input >> config;
   input.close();
 
-
   std::string proton = config["proton"].asString();
   std::string pion   = config["pion"].asString();
   std::string muon1  = config["muon1"].asString();
@@ -31,399 +29,182 @@ int main( int argc, char** argv ) {
   std::string lambda0 = config["lambda0"].asString();
 
 
-  bool isMC            = config["isMC"].asBool();
+  // bool isMC            = config["isMC"].asBool();
   bool rapidsim        = config["rapidsim"].asBool();
   std::string partName = config["particle"].asString();
-  // unsigned int year    = config["year"].asUInt();
-  // Polarity: MgUp = -1, MgDn = 1.0; from tools/src/BeamCrossing.cc
-  // int polarity         = config["polarity"].asInt();
   std::string inName   = config["inFile"].asString();
   std::string outName  = config["outFile"].asString();
   std::string tree     = config["tree"].asString();
 
-  // std::string inputDir = std::string(std::getenv("LBANAMASTER")) + "/";
-  // if (isMC) { inputDir = std::string(std::getenv("LBANAMC")) + "/"; }
-  TreeReader* reader = new TreeReader( tree );
-  reader->AddFile(inName);
-  reader->Initialize();
+  TFile* in = new TFile( inName.c_str(), "read" );
+  TTree* inTree = (TTree*)in->Get( tree.c_str() );
+ 
+  // Activate all branches
+  inTree->SetBranchStatus("*", 1);
 
-  // std::string outputDir = std::string(std::getenv("LBANAINTERMEDIATE")) + "/";
   TFile out(outName.c_str(), "recreate");
   TTree* newTree = new TTree( tree.c_str(), "" );
-  reader->BranchNewTree( newTree );
+  newTree->SetDirectory( &out );
+  newTree = inTree->CloneTree();
 
-  bool isLb = true;
-  if ( partName == "B0" ) {
-    std::cout<<"PARTICLE is B0"<<std::endl;
-    isLb = false;
+  int proton_q, muon1_q, h1_id;
+  double proton_px, proton_py, proton_pz;
+  double pion_px, pion_py, pion_pz;
+  double muon1_px, muon1_py, muon1_pz;
+  double muon2_px, muon2_py, muon2_pz;
+  std::vector<int> *proton_q_vec=new std::vector<int> ();
+  std::vector<int> *muon1_q_vec=new std::vector<int> ();
+  std::vector<float> *proton_px_vec=new std::vector<float> ();
+  std::vector<float> *proton_py_vec=new std::vector<float> ();
+  std::vector<float> *proton_pz_vec=new std::vector<float> ();
+  std::vector<float> *pion_px_vec=new std::vector<float> ();
+  std::vector<float> *pion_py_vec=new std::vector<float> ();
+  std::vector<float> *pion_pz_vec=new std::vector<float> ();
+  std::vector<float> *muon1_px_vec=new std::vector<float> ();
+  std::vector<float> *muon1_py_vec=new std::vector<float> ();
+  std::vector<float> *muon1_pz_vec=new std::vector<float> ();
+  std::vector<float> *muon2_px_vec=new std::vector<float> ();
+  std::vector<float> *muon2_py_vec=new std::vector<float> ();
+  std::vector<float> *muon2_pz_vec=new std::vector<float> ();
+  std::vector<int> *h1_id_vec=new std::vector<int> ();
+  if (rapidsim){
+    inTree->SetBranchAddress( (proton+"PX").c_str(), &proton_px );
+    inTree->SetBranchAddress( (proton+"PY").c_str(), &proton_py );
+    inTree->SetBranchAddress( (proton+"PZ").c_str(), &proton_pz );
+    inTree->SetBranchAddress( (pion+"PX").c_str(), &pion_px );
+    inTree->SetBranchAddress( (pion+"PY").c_str(), &pion_py );
+    inTree->SetBranchAddress( (pion+"PZ").c_str(), &pion_pz );
+    inTree->SetBranchAddress( (muon1+"PX").c_str(), &muon1_px );
+    inTree->SetBranchAddress( (muon1+"PY").c_str(), &muon1_py );
+    inTree->SetBranchAddress( (muon1+"PZ").c_str(), &muon1_pz );
+    inTree->SetBranchAddress( (muon2+"PX").c_str(), &muon2_px );
+    inTree->SetBranchAddress( (muon2+"PY").c_str(), &muon2_py );
+    inTree->SetBranchAddress( (muon2+"PZ").c_str(), &muon2_pz );
+    proton_q = 1;
+    muon1_q  = 1;
+  } else {
+    inTree->SetBranchAddress( (proton+"px").c_str(), &proton_px_vec );
+    inTree->SetBranchAddress( (proton+"py").c_str(), &proton_py_vec );
+    inTree->SetBranchAddress( (proton+"pz").c_str(), &proton_pz_vec );
+    inTree->SetBranchAddress( (pion+"px").c_str(), &pion_px_vec );
+    inTree->SetBranchAddress( (pion+"py").c_str(), &pion_py_vec );
+    inTree->SetBranchAddress( (pion+"pz").c_str(), &pion_pz_vec );
+    inTree->SetBranchAddress( (muon1+"px").c_str(), &muon1_px_vec );
+    inTree->SetBranchAddress( (muon1+"py").c_str(), &muon1_py_vec );
+    inTree->SetBranchAddress( (muon1+"pz").c_str(), &muon1_pz_vec );
+    inTree->SetBranchAddress( (muon2+"px").c_str(), &muon2_px_vec );
+    inTree->SetBranchAddress( (muon2+"py").c_str(), &muon2_py_vec );
+    inTree->SetBranchAddress( (muon2+"pz").c_str(), &muon2_pz_vec );
+    inTree->SetBranchAddress( (proton+"q").c_str(), &proton_q_vec );
+    inTree->SetBranchAddress( (muon1+"q").c_str(), &muon1_q_vec );
+    inTree->SetBranchAddress( (proton+"type").c_str(), &h1_id_vec );
   }
 
-  // Anja did this
-  // bool B03D=false;
-  // if ( !config["B0_3D"].empty() )
-  // {
-  //   B03D = config["B0_3D"].asBool();
-  //   std::cout << "B03D = " << (int)B03D << std::endl;
-  //   if (B03D == 0) {std::cout << "Going to do 5D angles" << std::endl;}
-  // }
+  double ctPerp = 0;
+  double ctPara = 0;
+  double ctL = 0;
+  double ctH = 0;
+  double phiL = 0;
+  double phiH = 0;
+  double dphi = 0;
+  double q2 = 0;
+  double mppi = 0;
 
-  bool constrained = true;
-  if ( !config["constrained"].empty() )
-  {
-    constrained = config["constrained"].asBool();
-  }
+  const double mproton = 0.938272081;
+  const double mpion = 0.13957061;
+  const double mmuon = 0.1056583745;
 
-  // Anja did this because FCC collisions are head-on, right?
-  // bool BeamCrossing=true;
-  // if ( !config["beamCrossing"].empty() ) {
-  //   BeamCrossing = config["beamCrossing"].asBool();
-  // }
-
-  // Create new branches
-  // reco
-  double ctPerp;
-  double ctPara;
-  double ctL;
-  double ctH;
-  double phiL;
-  double phiH;
-  double dphi;
-
-  //true
-  double ctPerpT;
-  double ctParaT;
-  double ctLT;
-  double ctHT;
-  double phiLT;
-  double phiHT;
-  double dphiT;
-  double true_q2;
-  double true_mpk;
-
-  //constrained momentum
-  double cctPerp;
-  double cctPara;
-  double cctL;
-  double cctH;
-  double cphiL;
-  double cphiH;
-  double cdphi;
-
-  double q2;
-  // Anja did this
-  // bool l0;
-  // bool hlt1;
-  // bool hlt2;
-  // bool trigger;
-  // double q2_diff;
-
-  /////////////////////////////////////////////////////////////////////////////////////
-  //this is normaly what is used for the B02JpsiKS with 3 angles
-  // Anja did this
-  // if(B03D)
-  // {
-  //   //////////////////////////////////////////////////////////////////////
-  //   // reco
-  //   newTree->Branch("cosThetaL", &ctL, "cosThetaL/D");
-  //   newTree->Branch("cosThetaH", &ctH, "cosThetaH/D");
-  //   newTree->Branch("dphi", &dphi, "dphi/D");
-  //   if ( isMC )
-  //   {
-  //     ///////////////////////////////////////////////////////////////////
-  //     //true
-  //     newTree->Branch("true_cosThetaL", &ctLT, "true_cosThetaL/D");
-  //     newTree->Branch("true_cosThetaH", &ctHT, "true_cosThetaH/D");
-  //     newTree->Branch("true_dphi", &dphiT, "true_dphi/D");
-  //   }
-  // }
-  // else
-  {
-  ////////////////////////////////////////////////////////////////////////////////////
-  //for Lb2Lmumu and for Lb2JpsiL
-    ///////////////////////////////////////////////////////////////////////////
-    //reco
-    newTree->Branch("cosThetaPerp", &ctPerp, "cosThetaPerp/D");
-    newTree->Branch("cosThetaPara", &ctPara, "cosThetaPara/D");
-    newTree->Branch("cosThetaL", &ctL, "cosThetaL/D");
-    newTree->Branch("cosThetaH", &ctH, "cosThetaH/D");
-    newTree->Branch("phiL", &phiL, "phiL/D");
-    newTree->Branch("phiH", &phiH, "phiH/D");
-    newTree->Branch("dphi", &dphi, "dphi/D");
-
-    ////////////////////////////////////////////////////////////////////////////
-    //const
-    newTree->Branch("cosThetaPerp_c", &cctPerp, "cosThetaPerp_c/D");
-    newTree->Branch("cosThetaPara_c", &cctPara, "cosThetaPara_c/D");
-    newTree->Branch("cosThetaL_c", &cctL, "cosThetaL_c/D");
-    newTree->Branch("cosThetaH_c", &cctH, "cosThetaH_c/D");
-    newTree->Branch("phiL_c", &cphiL, "phiL_c/D");
-    newTree->Branch("phiH_c", &cphiH, "phiH_c/D");
-    newTree->Branch("dphi_c", &cdphi, "dphi_c/D");
-
-    if ( isMC )
-    {
-      ////////////////////////////////////////////////////////////////////////////
-      //true
-      newTree->Branch("true_cosThetaPerp", &ctPerpT, "true_cosThetaPerp/D");
-      newTree->Branch("true_cosThetaPara", &ctParaT, "true_cosThetaPara/D");
-      newTree->Branch("true_cosThetaL", &ctLT, "true_cosThetaL/D");
-      newTree->Branch("true_cosThetaH", &ctHT, "true_cosThetaH/D");
-      newTree->Branch("true_phiL", &phiLT, "true_phiL/D");
-      newTree->Branch("true_phiH", &phiHT, "true_phiH/D");
-      newTree->Branch("true_dphi", &dphiT, "true_dphi/D");
-      newTree->Branch("true_q2", &true_q2, "true_q2/D" );
-      newTree->Branch("true_mpk", &true_mpk, "true_mpk/D" );
-      ////////////////////////////////////////////////////////////////////////////
-      //true q2 ranges
-      // newTree->Branch("true_q2_jpsi",  &true_q2_jpsi,  "true_q2_jpsi/O");
-      // newTree->Branch("true_q2_psi2s", &true_q2_psi2s, "true_q2_psi2s/O");
-      // newTree->Branch("true_q2_rare",  &true_q2_rare,  "true_q2_rare/O");
-    }
-  }
-
+  newTree->Branch("cosThetaPerp", &ctPerp, "cosThetaPerp/D");
+  newTree->Branch("cosThetaPara", &ctPara, "cosThetaPara/D");
+  newTree->Branch("cosThetaL", &ctL, "cosThetaL/D");
+  newTree->Branch("cosThetaH", &ctH, "cosThetaH/D");
+  newTree->Branch("phiL", &phiL, "phiL/D");
+  newTree->Branch("phiH", &phiH, "phiH/D");
+  newTree->Branch("dphi", &dphi, "dphi/D");
   newTree->Branch( "q2", &q2, "q2/D" );
-  // Anja did this
-  // newTree->Branch( "q2_diff", &q2_diff, "q2_diff/D" );
-  // newTree->Branch( "l0", &l0, "l0/O" );
-  // newTree->Branch( "hlt1", &hlt1, "hlt1/O" );
-  // newTree->Branch( "hlt2", &hlt2, "hlt2/O" );
-  // newTree->Branch( "trigger", &trigger, "trigger/O" );
-
-  ////////////////////////////////////////////////////////////////////////////
-  // //q2 ranges
-  // newTree->Branch("q2_jpsi",  &q2_jpsi,  "q2_jpsi/O");
-  // newTree->Branch("q2_psi2s", &q2_psi2s, "q2_psi2s/O");
-  // newTree->Branch("q2_rare",  &q2_rare,  "q2_rare/O");
+  newTree->Branch( "mppi", &mppi, "mppi/D" );
 
   TLorentzVector initialProton;
-  double charge=0;
   initialProton.SetPxPyPzE(0,0,1.,0);
 
-  long nevents = reader->GetEntries();
+  int nevents = newTree->GetEntries();
   if ( !config["events"].empty() )
   {
     nevents = config["events"].asInt64();
   }
 
-  for ( long i = 0; i < nevents; ++i ) {
+  for ( int i = 0; i < nevents; ++i ) {
 
     if (i%1000 == 0) {std::cout<<"Processing event = "<<nevents-i<<std::endl;}
 
-    reader->GetEntry( i );
+    newTree->GetEntry( i );
 
-    TLorentzVector LbP4, JpsiP4, LP4, pP4, piP4, mupP4, mumP4, q_diff_P4;
-    // tools::getFourMomentum( partName, reader, LbP4 , rapidsim);
-    // tools::getFourMomentum( "Jpsi", reader, JpsiP4 , rapidsim);
-    // tools::getFourMomentum( lambda0, reader, LP4 , rapidsim);
-
-    tools::getFourMomentum( proton, reader, pP4 , rapidsim);
-    tools::getFourMomentum( pion, reader, piP4 , rapidsim);
-
-    float mu1charge = 1.0;
-    if (rapidsim) {
-      mu1charge = 1.0; // This is alwasy a mup in rapidsim
-    } else {
-      mu1charge = reader->GetValue(muon1+"q");
+    if (!rapidsim){
+      proton_q = proton_q_vec->at(0);
+      h1_id = h1_id_vec->at(0);
+      // h1 may be the proton or the pion
+      if (h1_id == 2212){
+        proton_px = proton_px_vec->at(0);
+        proton_py = proton_py_vec->at(0);
+        proton_pz = proton_pz_vec->at(0);
+        pion_px = pion_px_vec->at(0);
+        pion_py = pion_py_vec->at(0);
+        pion_pz = pion_pz_vec->at(0);
+      } else if (h1_id == 211){
+        pion_px = proton_px_vec->at(0);
+        pion_py = proton_py_vec->at(0);
+        pion_pz = proton_pz_vec->at(0);
+        proton_px = pion_px_vec->at(0);
+        proton_py = pion_py_vec->at(0);
+        proton_pz = pion_pz_vec->at(0);
+        proton_q = -proton_q;
+      } else {
+        std::cerr<<"h1_id = "<<h1_id<<std::endl;
+        exit(1);
+      }
+      muon1_q = muon1_q_vec->at(0);
+      muon1_px = muon1_px_vec->at(0);
+      muon1_py = muon1_py_vec->at(0);
+      muon1_pz = muon1_pz_vec->at(0);
+      muon2_px = muon2_px_vec->at(0);
+      muon2_py = muon2_py_vec->at(0);
+      muon2_pz = muon2_pz_vec->at(0);
     }
 
-    if (mu1charge>0)// (reader->GetValue(muon1+"_ID")<0)
+    TLorentzVector LbP4, JpsiP4, LP4, pP4, piP4, mupP4, mumP4, q_diff_P4;
+
+    tools::getFourMomentum( proton_px, proton_py, proton_pz, pP4, mproton);
+    tools::getFourMomentum( pion_px, pion_py, pion_pz, piP4, mpion);
+
+    if (muon1_q>0)
     {
-      tools::getFourMomentum(muon1,  reader, mupP4, rapidsim);
-      tools::getFourMomentum(muon2, reader, mumP4, rapidsim);
+      tools::getFourMomentum(muon1_px, muon1_py, muon1_pz, mupP4, mmuon);
+      tools::getFourMomentum(muon2_px, muon2_py, muon2_pz, mumP4, mmuon);
     }
     else
     {
-      tools::getFourMomentum(muon2, reader, mupP4, rapidsim);
-      tools::getFourMomentum(muon1,  reader, mumP4, rapidsim);
+      tools::getFourMomentum(muon2_px, muon2_py, muon2_pz, mupP4, mmuon);
+      tools::getFourMomentum(muon1_px, muon1_py, muon1_pz, mumP4, mmuon);
     }
     LbP4 = pP4 + piP4 + mupP4 + mumP4;
     JpsiP4 = mupP4 + mumP4;
     LP4 = pP4 + piP4;
 
-      charge = 1.0;//TODO!!! reader->GetValue(proton+"_ID");
-      // Anja did this because FCC collisions are head-on, right?
-      // if (BeamCrossing)
-      // {
-      //   std::map<std::string, TLorentzVector> bc =
-      //       tools::BeamCrossing(year, polarity);
-      //   TVector3 boostPCOM = bc["pcom"].BoostVector();
-      //   initialProton.SetPxPyPzE(bc["b1"][0], bc["b1"][1], bc["b1"][2],
-      //                            bc["b1"][3]);
-      //   initialProton.Boost(boostPCOM);
-      //   mumP4.Boost(boostPCOM);
-      //   mupP4.Boost(boostPCOM);
-      //   piP4.Boost(boostPCOM);
-      //   pP4.Boost(boostPCOM);
+    tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
+                        piP4, proton_q, ctPerp, ctPara, ctL, ctH, phiL, phiH, dphi);
 
-      //   JpsiP4 = mumP4 + mupP4;
-      //   LP4 = piP4 + pP4;
-      //   LbP4 = JpsiP4 + LP4;
-      // }
-      tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
-                          piP4, charge, ctPerp, ctPara, ctL, ctH, phiL, phiH, dphi);
-    // }
-
-    /////////////////////////////////////////////////////////////////////////////////////////////////
-    //true
-    if (isMC)
-    {
-      //tools::getFourMomentum(partName,  reader, LbP4,false, rapidsim);
-      //tools::getFourMomentum("Jpsi",    reader, JpsiP4,false, rapidsim);
-      //tools::getFourMomentum("L0",      reader, LP4,false, rapidsim);
-      tools::getFourMomentum(proton,   reader, pP4, rapidsim, false);
-      tools::getFourMomentum(pion,  reader, piP4, rapidsim, false);
-
-      float mu1charge_true = 1.0;
-      if (rapidsim) {
-        mu1charge_true = 1.0; // This is alwasy a mup in rapidsim
-      } else {
-        mu1charge_true = reader->GetValue(muon1+"q");
-      }
-
-      if (mu1charge_true>0)// (reader->GetValue(muon1+"_TRUEID")<0)
-      {
-        tools::getFourMomentum(muon1,  reader, mupP4, rapidsim, false);
-        tools::getFourMomentum(muon2, reader, mumP4, rapidsim, false);
-      }
-      else
-      {
-        tools::getFourMomentum(muon2, reader, mupP4, rapidsim, false);
-        tools::getFourMomentum(muon1,  reader, mumP4, rapidsim, false);
-
-      }
-      JpsiP4=mumP4+mupP4;
-      LP4=piP4+pP4;
-      LbP4=JpsiP4+LP4;
-
-
-      true_mpk=LP4.M() / 1e3;
-
-      true_q2 = JpsiP4.M()*JpsiP4.M() / 1e6;
-
-      // if (B03D)
-      // {
-      //   tools::B0PsiRAngles(LbP4, JpsiP4, LP4, mupP4, mumP4, pP4, piP4, ctLT,
-      //                       ctHT, dphiT);
-      // }
-      // else
-      // {
-        charge = 1.0;//TODO!!!reader->GetValue(proton+"_TRUEID");
-        tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
-                            piP4, charge, ctPerpT, ctParaT, ctLT, ctHT, phiLT, phiHT, dphiT);
-      // }
-    }
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    //constrained
-    if ( constrained && (isLb) )
-    {
-      std::string head = "Lb";
-      if (!isLb) {
-        head = "B0";
-      }
-      // tools::getFourMomentum_C(head, "Jpsi",     reader, JpsiP4);
-      if (isLb)
-      {
-        // tools::getFourMomentum_C(head, lambda0, reader, LP4);
-        tools::getFourMomentum_C(head, proton, reader, pP4, rapidsim);
-        tools::getFourMomentum_C(head, pion, reader, piP4, rapidsim);
-      }
-      // else
-      // {
-      //   // tools::getFourMomentum_C(head, lambda0, reader, LP4); // TODO: should be KS
-      //   tools::getFourMomentum_C(head, proton, reader, pP4); // TODO: should be kaon
-      //   tools::getFourMomentum_C(head, pion, reader, piP4, rapidsim);
-      // }
-
-      if (mu1charge>0)// (reader->GetValue(muon1+"_ID")<0)
-      {
-        tools::getFourMomentum_C(head, muon1,  reader, mupP4, rapidsim);
-        tools::getFourMomentum_C(head, muon2, reader, mumP4, rapidsim);
-      }
-      else
-      {
-        tools::getFourMomentum_C(head, muon2, reader, mupP4, rapidsim);
-        tools::getFourMomentum_C(head, muon1,  reader, mumP4, rapidsim);
-      }
-
-      LP4 = pP4 + piP4;
-
-      if ( lambda0 == "L0" ) {
-        double eL0 = TMath::Sqrt( LP4.P()*LP4.P() + 1.115683 * 1.115683 );
-        LP4.SetE(eL0);
-      } else if ( lambda0 == "Ks" ) {
-        double eL0 = TMath::Sqrt( LP4.P()*LP4.P() + 0.497611 * 0.497611 );
-        LP4.SetE(eL0);
-      }
-
-      JpsiP4 = mupP4 + mumP4;
-      double eJpsi = TMath::Sqrt( JpsiP4.P()*JpsiP4.P() + 3.096900 * 3.096900 );
-      JpsiP4.SetE(eJpsi);
-
-      // Anja did this because FCC collisions are head-on, right?
-      // if(BeamCrossing)
-      // {
-      //   std::map<std::string,TLorentzVector> bc = tools::BeamCrossing(year,polarity);
-      //   TVector3 boostPCOM=bc["pcom"].BoostVector();
-      //   initialProton.SetPxPyPzE(bc["b1"][0],bc["b1"][1],bc["b1"][2],bc["b1"][3]);
-      //   initialProton.Boost(boostPCOM);
-      //   mumP4.Boost(boostPCOM);
-      //   mupP4.Boost(boostPCOM);
-      //   piP4.Boost(boostPCOM);
-      //   pP4.Boost(boostPCOM);
-
-      // }
-      // JpsiP4 = mumP4 + mupP4;
-      // LP4 = piP4 + pP4;
-      LbP4=JpsiP4+LP4;
-
-
-      float protoncharge = 1.0;
-      if (rapidsim) {
-        protoncharge = 1.0; // This is alwasy a p+ in rapidsim
-      } else {
-        protoncharge = reader->GetValue(proton+"q");
-      }
-      tools::LbPsiRAngles(initialProton, LbP4, JpsiP4, LP4, mupP4, mumP4, pP4,
-                          piP4, protoncharge, cctPerp, cctPara, cctL, cctH, cphiL, cphiH, cdphi);
-
-    }
-
-    // Anja did this
-    // // Trigger
-    // trigger = tools::passTrigger( reader, "Jpsi", "Jpsi", year, //true,
-    //                               l0, hlt1, hlt2 );
-
-    // q2
-    // q2 = reader->GetValue( "Jpsi_M" );
-    // q2 = q2 / 1e3;  // Go to GeV^2 for simplicity
-    // q2 = q2 * q2;
-
-    // Dimuon from difference of Lb and L0
-    // q_diff_P4 = LbP4 - LP4;
-    // q2_diff = 1e-6*q_diff_P4.M2();
-
-  
-    // // q2 ranges
-    // if ((  8   < q2 ) && ( q2 < 11 )) { q2_jpsi  = true; } else { q2_jpsi  = false; }
-    // if (( 12.5 < q2 ) && ( q2 < 15 )) { q2_psi2s = true; } else { q2_psi2s = false; }
-    // if (( q2 < 0.98 ) || (( 1.1 < q2 ) && ( q2 < 8 )) || (( 11 < q2 ) && (true_q2 < 12.5)) || ( 15 < true_q2 )) {
-    //   q2_rare = true;
-    // } else {
-    //   q2_rare = false;
-    // }
-
-    // if (isMC) {
-    //   if ((  8   < true_q2 ) && ( true_q2 < 11 )) { true_q2_jpsi  = true; } else { true_q2_jpsi  = false; }
-    //   if (( 12.5 < true_q2 ) && ( true_q2 < 15 )) { true_q2_psi2s = true; } else { true_q2_psi2s = false; }
-    //   if (( true_q2 < 0.98 ) || (( 1.1 < true_q2 ) && ( true_q2 < 8 )) || (( 11 < true_q2 ) && (true_q2 < 12.5)) || ( 15 < true_q2 )) {
-    //     true_q2_rare = true;
-    //   } else {
-    //     true_q2_rare = false;
-    //   }
-    // }
+    q2 = JpsiP4.M2();
+    mppi = LP4.M();
 
     newTree->Fill();
   }
+  out.cd();
   newTree->Write();
+  // out.Write();
+  newTree->SetDirectory(nullptr);
   out.Close();
+  in->Close();
+  // this is to avoid the segfault
+  // delete reader;
+  return 0;
 }

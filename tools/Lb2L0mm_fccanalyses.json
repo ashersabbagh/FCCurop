@@ -1,7 +1,7 @@
 {
     "isMC": false,
     "particle": "Lb",
-    "inFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_reconstructed.root",
+    "inFile": "/work/submit/amsabbag/FCCurop/data/clean2.root",
     "outFile": "/home/submit/anbeck/public/for_asher/Lb2Lmm_reconstructed_angles.root",
     "proton": "LCandidates_h1",
     "pion": "LCandidates_h2",
@@ -9,5 +9,6 @@
     "muon2": "Muons_mu2",
     "lambda0": "None",
     "rapidsim": false,
-    "tree": "events"
+    "tree": "events",
+    "constrained": false
 }

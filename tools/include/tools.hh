@@ -17,16 +17,15 @@ namespace tools
 
   std::map< std::string, TLorentzVector > BeamCrossing( int year, int pol );
 
-  void getFourMomentum( std::string partName,
-                        TreeReader* reader,
+  void getFourMomentum( double px, double py, double pz,
                         TLorentzVector& result,
-                        bool rapidsim,
-                        bool reconstructed = true );
+                        double mass);
 
   void getFourMomentum_C( std::string head, std::string partName,
                         TreeReader* reader,
                         TLorentzVector& result,
-                        bool rapidsim );
+                        bool rapidsim,
+                        double mass );
 
   void LbPsiRAngles( TLorentzVector initialProton,
                      TLorentzVector pB,

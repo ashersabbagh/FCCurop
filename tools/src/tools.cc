@@ -2,39 +2,11 @@
 
 namespace tools {
 
-  void getFourMomentum( std::string particleName,
-                        TreeReader* reader,
+  void getFourMomentum( double px, double py, double pz,
                         TLorentzVector& result,
-                        bool rapidsim,
-                        bool reconstructed ) {
-    double px, py, pz, pe;
-    if ( rapidsim ) {
-      if ( reconstructed ) {
-        px = reader->GetValue( ( particleName + "PX" ).c_str() );
-        py = reader->GetValue( ( particleName + "PY" ).c_str() );
-        pz = reader->GetValue( ( particleName + "PZ" ).c_str() );
-        pe = reader->GetValue( ( particleName + "E" ).c_str() );
-      } else {
-        px = reader->GetValue( ( particleName + "PX_TRUE" ).c_str() );
-        py = reader->GetValue( ( particleName + "PY_TRUE" ).c_str() );
-        pz = reader->GetValue( ( particleName + "PZ_TRUE" ).c_str() );
-        pe = reader->GetValue( ( particleName + "E_TRUE" ).c_str() );
-      }
-    } else {
-      if ( reconstructed ) {
-        px = reader->GetValue( ( particleName + "px" ).c_str() );
-        py = reader->GetValue( ( particleName + "py" ).c_str() );
-        pz = reader->GetValue( ( particleName + "pz" ).c_str() );
-        float p = TMath::Sqrt( px * px + py * py + pz * pz );
-        pe = TMath::Sqrt( p * p + 0.13957061 * 0.13957061 );
-      } else {
-        px = reader->GetValue( ( particleName + "px_TRUE" ).c_str() );
-        py = reader->GetValue( ( particleName + "py_TRUE" ).c_str() );
-        pz = reader->GetValue( ( particleName + "pz_TRUE" ).c_str() );
-        float p = TMath::Sqrt( px * px + py * py + pz * pz );
-        pe = TMath::Sqrt( p * p + 0.13957061 * 0.13957061 );
-      }
-    }
+                        double mass) {
+    double p = TMath::Sqrt( px * px + py * py + pz * pz );
+    double pe = TMath::Sqrt( p * p + mass * mass );
     result.SetPxPyPzE( px, py, pz, pe );
 
     return;
@@ -44,9 +16,9 @@ namespace tools {
                           std::string particleName,
                           TreeReader* reader,
                           TLorentzVector& result,
-                          bool rapidsim ) {
+                          bool rapidsim,
+                          double mass ) {
     double px, py, pz, pe;
-    double mass = 0.;
 
     if ( particleName == "L0" ) {
       mass = 1.115683;
